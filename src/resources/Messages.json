@@ -1,0 +1,59 @@
+{
+	"internal": {
+		"commandsLoaded": "Loaded {size} commands",
+		"featuresLoaded": "Loaded {size} features"
+	},
+	"external": {
+		"default": {
+			"slashCommandsLoadAddingError": "Cannot add slash commands to this server, bot must be added with the `application.commands` scope",
+			"errorEmbedTitle": "Error",
+			"permissions": {
+				"CREATE_INSTANT_INVITE": "CREATE INSTANT INVITE",
+				"KICK_MEMBERS": "KICK MEMBERS",
+				"BAN_MEMBERS": "BAN MEMBERS",
+				"ADMINISTRATOR": "ADMINISTRATOR",
+				"MANAGE_CHANNELS": "MANAGE CHANNELS",
+				"MANAGE_GUILDS": "MANAGE GUILDS",
+				"ADD_REACTIONS": "ADD REACTIONS",
+				"VIEW_AUDIT_LOGS": "VIEW AUDIT LOGS",
+				"PRIORITY_SPEAKER": "PRIORITY SPEAKER",
+				"STREAM": "STREAM",
+				"VIEW_CHANNEL": "VIEW CHANNEL",
+				"SEND_MESSAGES": "SEND MESSAGES",
+				"SEND_TTS_MESSAGES": "SEND TTS MESSAGES",
+				"MANAGE_MESSAGES": "MANAGE MESSAGES",
+				"EMBED_LINKS": "EMBED LINKS",
+				"ATTACH_FILES": "ATTACH FILES",
+				"READ_MESSAGE_HISTORY": "READ MESSAGE HISTORY",
+				"MENTION_EVERYONE": "MENTION EVERYONE",
+				"USE_EXTERNAL_EMOJIS": "USE EXTERNAL EMOJIS",
+				"VIEW_GUILD_INSHIGHTS": "VIEW GUILD INSHIGHTS",
+				"CONNECT": "CONNECT",
+				"SPEAK": "SPEAK",
+				"MUTE_MEMBERS": "MUTE MEMBERS",
+				"DEAFEN_MEMBERS": "DEAFEN MEMBERS",
+				"MOVE_MEMBERS": "MOVE MEMBERS",
+				"USE_VAD": "USE VAD",
+				"CHANGE_NICKNAMES": "CHANGE NICKNAMES",
+				"MANAGE_NICKNAMES": "MANAGE NICKNAMES",
+				"MANAGE_ROLES": "MANAGE ROLES",
+				"MANAGE_WEBHOOKS": "MANAGE WEBHOOKS",
+				"MANAGE_EMOJIS_AND_STICKERS": "MANAGE EMOJIS AND STICKERS",
+				"USE_APPLICATION_COMMANDS": "USE APPLICATION COMMANDS",
+				"REQUEST_TO_SPEAK": "REQUEST TO SPEAK",
+				"MMANAGE_THREADS": "MANAGE THREADS",
+				"USE_PUBLIC_THREADS": "USE PUBLIC THREADS",
+				"USE_EXTERNAL_STICKERS": "USE EXTERNAL STICKERS"
+			},
+			"errors": {
+				"noPermissions": "You don't have required permissions to perform this action. Required permissions: {permissions}",
+				"noBotPermissions": "Bot does not have required permissions to perform this action. Required permissions: {permissions}",
+				"commandDisabled": "Sorry. This command was disabled by developers"
+			},
+			"internalError": {
+				"title": "Bot error",
+				"description": "An error occurred while executing this command"
+			}
+		}
+	}
+}

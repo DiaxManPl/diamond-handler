@@ -51,16 +51,23 @@ const objectEquals = (x, y) => {
 	);
 };
 
-const objectPath = (obj, path) => path.split('.').reduce((o, i) => o[i], obj);
+const objectPath = (obj, path) => {
+	try {
+		return path.split('.').reduce((o, i) => o[i], obj);
+	} catch (e) {}
+};
 
-const objectMerge = (target, source) => {
-	Object.entries(source).forEach(([key, value]) => {
-		if (value && typeof value === 'object') {
-			objectMerge((target[key] = target[key] || {}), value);
-			return;
-		}
-		target[key] = value;
+const objectMerge = (target, ...sources) => {
+	sources.forEach(source => {
+		Object.entries(source).forEach(([key, value]) => {
+			if (value && typeof value === 'object') {
+				objectMerge((target[key] = target[key] || {}), value);
+				return;
+			}
+			target[key] = value;
+		});
 	});
+
 	return target;
 };
 

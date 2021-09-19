@@ -1,13 +1,15 @@
 const {
 	Client,
 	Collection,
+	Constants: { Events: DCEvents },
 	Permissions: { FLAGS },
+	MessageEmbed,
 } = require('discord.js');
 const path = require('path');
 const fs = require('fs-extra');
 const EventEmitter = require('events');
 const { Guild, Interaction } = require('./utils/Structures.js');
-const { Events } = require('./utils/enums');
+const { Events, ApplicationCommandOptionTypes } = require('./utils/constants');
 const utils = require('./utils/utils');
 
 class DiamondHandler extends EventEmitter {
@@ -20,6 +22,7 @@ class DiamondHandler extends EventEmitter {
 					commands: '.cmd.js',
 					features: '.feature.js',
 				},
+				defaultLanguage: 'english',
 			},
 			options
 		);
@@ -36,7 +39,6 @@ class DiamondHandler extends EventEmitter {
 		this.commands = new Collection();
 		this.options = options;
 		this.color = '#ffffff';
-		this.defaultLanguage = 'english';
 		this.db = {};
 		this.db.global = {};
 		this._build();
@@ -51,75 +53,17 @@ class DiamondHandler extends EventEmitter {
 		if (!fs.existsSync(messagesPath)) throw new Error("Cannot find messagesPath. If you want to specify relative path, don't insert  '/' at start");
 		this.options.commandsDir = commandsDir;
 		this.options.featuresDir = featuresDir;
-		const messages = utils.objectMerge(
-			{
-				internal: {
-					commandsLoaded: 'Loaded {size} commands',
-					featuresLoaded: 'Loaded {size} features',
-				},
-				external: {
-					english: {
-						slashCommandsLoadAddingError: 'Cannot add slash commands to this server, bot must be added with the `application.commands` scope',
-						errorEmbedTitle: 'Error',
-						permissions: {
-							CREATE_INSTANT_INVITE: 'CREATE INSTANT INVITE',
-							KICK_MEMBERS: 'KICK MEMBERS',
-							BAN_MEMBERS: 'BAN MEMBERS',
-							ADMINISTRATOR: 'ADMINISTRATOR',
-							MANAGE_CHANNELS: 'MANAGE CHANNELS',
-							MANAGE_GUILDS: 'MANAGE GUILDS',
-							ADD_REACTIONS: 'ADD REACTIONS',
-							VIEW_AUDIT_LOGS: 'VIEW AUDIT LOGS',
-							PRIORITY_SPEAKER: 'PRIORITY SPEAKER',
-							STREAM: 'STREAM',
-							VIEW_CHANNEL: 'VIEW CHANNEL',
-							SEND_MESSAGES: 'SEND MESSAGES',
-							SEND_TTS_MESSAGES: 'SEND TTS MESSAGES',
-							MANAGE_MESSAGES: 'MANAGE MESSAGES',
-							EMBED_LINKS: 'EMBED LINKS',
-							ATTACH_FILES: 'ATTACH FILES',
-							READ_MESSAGE_HISTORY: 'READ MESSAGE HISTORY',
-							MENTION_EVERYONE: 'MENTION EVERYONE',
-							USE_EXTERNAL_EMOJIS: 'USE EXTERNAL EMOJIS',
-							VIEW_GUILD_INSHIGHTS: 'VIEW GUILD INSHIGHTS',
-							CONNECT: 'CONNECT',
-							SPEAK: 'SPEAK',
-							MUTE_MEMBERS: 'MUTE MEMBERS',
-							DEAFEN_MEMBERS: 'DEAFEN MEMBERS',
-							MOVE_MEMBERS: 'MOVE MEMBERS',
-							USE_VAD: 'USE VAD',
-							CHANGE_NICKNAMES: 'CHANGE NICKNAMES',
-							MANAGE_NICKNAMES: 'MANAGE NICKNAMES',
-							MANAGE_ROLES: 'MANAGE ROLES',
-							MANAGE_WEBHOOKS: 'MANAGE WEBHOOKS',
-							MANAGE_EMOJIS_AND_STICKERS: 'MANAGE EMOJIS AND STICKERS',
-							USE_APPLICATION_COMMANDS: 'USE APPLICATION COMMANDS',
-							REQUEST_TO_SPEAK: 'REQUEST TO SPEAK',
-							MMANAGE_THREADS: 'MANAGE THREADS',
-							USE_PUBLIC_THREADS: 'USE PUBLIC THREADS',
-							USE_EXTERNAL_STICKERS: 'USE EXTERNAL STICKERS',
-						},
-						errors: {
-							noPermissions: "You don't have required permissions to perform this action. Required permissions: {permissions}",
-							noBotPermissions: 'Bot does not have required permissions to perform this action. Required permissions: {permissions}',
-							commandDisabled: 'Sorry. This command was disabled by developers',
-						},
-						internalError: {
-							title: 'Bot error',
-							description: 'An error occurred while executing this command',
-						},
-					},
-				},
-			},
-			await fs.readJSON(messagesPath)
-		);
+		const defaultMessages = await fs.readJSON(path.join(__dirname, 'resources', 'Messages.json'));
+		defaultMessages.external[this.options.defaultLanguage] = defaultMessages.external.default;
+		delete defaultMessages.external.default;
+		const messages = utils.objectMerge(defaultMessages, await fs.readJSON(messagesPath));
 		if (!utils.objectEquals(messages, await fs.readJSONSync(messagesPath))) await fs.writeJSON(messagesPath, messages, { spaces: '\t', EOL: '\n' });
 		this.messages = messages;
 		this.messages.supportedLanguages = Object.keys(messages.external);
 		this._buildCommands();
 		this._buildFeatures();
-		this.client.on('interactionCreate', interaction => this._onInteraction(interaction));
-		this.client.on('ready', () => this._onReady());
+		this.client.on(DCEvents.INTERACTION_CREATE, interaction => this._onInteraction(interaction));
+		this.client.on(DCEvents.CLIENT_READY, () => this._onReady());
 	}
 	_buildCommands() {
 		this.categories = fs
@@ -193,13 +137,21 @@ class DiamondHandler extends EventEmitter {
 				],
 			});
 		const args = {};
-		parseArgs = options => {
+		const parseArgs = options => {
 			if (!options) return;
-			const values = options.map(option => interaction.options[`get${utils.firstUpper(option.type, '_', '')}`](option.name));
+			const values = options.map(
+				option =>
+					interaction.options[ApplicationCommandOptionTypes.Functions[option.type.toUpperCase()]](option.name) ??
+					(typeof option.default === 'function' ? option.default(interaction) : option.default)
+			);
 			options.forEach((option, index) => {
 				const value = values[index];
 				option.type = option.type.toLowerCase();
-				if (!['subcommand', 'subcommand_group'].includes(option.type)) {
+				if (
+					![ApplicationCommandOptionTypes.Numeric.SUB_COMMAND, ApplicationCommandOptionTypes.Numeric.SUB_COMMAND_GROUP].includes(
+						ApplicationCommandOptionTypes.Numeric[option.type.toUpperCase()]
+					)
+				) {
 					args[option.name] = value;
 				}
 				if (!args.subcommand) args.subcommand = [];
@@ -208,11 +160,11 @@ class DiamondHandler extends EventEmitter {
 				parseArgs(option.options);
 			});
 		};
-		parseArgs(cmd.options);
+		parseArgs(command.options);
 		if (args.subcommand) {
 			args.subcommand = args.subcommand.join(' ');
-			if (cmd.options.some(option => ['subcommand', 'subcommand_group'].includes(option.type.toLowerCase()))) {
-				const permissions = cmd.options
+			if (command.options.some(option => ['subcommand', 'subcommand_group'].includes(option.type.toLowerCase()))) {
+				const permissions = command.options
 					.find(option => option.name === args.subcommand.split(' ')[0])
 					?.options?.find(option => option.name === args.subcommand.split(' ')[1])?.permissions;
 				if (permissions) {
@@ -231,22 +183,58 @@ class DiamondHandler extends EventEmitter {
 			}
 		}
 		try {
-			cmd.run(command, args);
+			command.run(interaction, args, this);
 		} catch (error) {
-			command.reply({
-				embed: new MessageEmbed()
-					.setColor('RED')
-					.setTitle(interaction.guild.getMessage('internalError.title'))
-					.setDescription(interaction.guild.getMessage('internalError.description')),
+			interaction.reply({
+				embeds: [
+					new MessageEmbed()
+						.setColor('RED')
+						.setTitle(interaction.guild.getMessage('internalError.title'))
+						.setDescription(interaction.guild.getMessage('internalError.description')),
+				],
 			});
 			console.log(error);
 		}
 	}
 	_onReady() {
 		let commands = [...this.commands.values()];
+		const parseOptionType = options => {
+			return options.map(option => {
+				return option.options
+					? Object.assign({}, option, {
+							type: typeof option.type === 'string' ? ApplicationCommandOptionTypes.Numeric[option.type.toUpperCase()] : option.type,
+							options: parseOptionType(option.options),
+					  })
+					: Object.assign({}, option, {
+							type: typeof option.type === 'string' ? ApplicationCommandOptionTypes.Numeric[option.type.toUpperCase()] : option.type,
+					  });
+			});
+		};
+		const handleLanguage = (command, guild) => {
+			return Object.assign(command, {
+				description: guild.getMessage(`commands.${command.name.toLowerCase()}.description`) || command.description,
+				options: !command.options
+					? undefined
+					: command.options.map(option => {
+							return option.options
+								? utils.objectMerge(option, {
+										description: guild.getMessage(`commands.${command.name.toLowerCase()}.options.${option.name}`) || option.description,
+										options: parseOptionType(option.options),
+								  })
+								: utils.objectMerge(option, {
+										description: guild.getMessage(`commands.${command.name.toLowerCase()}.options.${option.name}`) || option.description,
+								  });
+					  }),
+			});
+		};
+		commands = commands.map(command => (command.options ? Object.assign({}, command, { options: parseOptionType(command.options) }) : command));
 		this.client.guilds.cache.forEach(async guild => {
-			guild.commands.set(commands).catch(err => guild.systemChannel.send(guild.getMessage('slashCommandsLoadAddingError')));
 			Object.assign(guild, Guild.call(guild, this));
+			commands = commands.map(command => handleLanguage(command, guild));
+			guild.commands.set(commands).catch(err => {
+				guild.systemChannel.send(guild.getMessage('slashCommandsLoadAddingError'));
+				console.log(err);
+			});
 		});
 	}
 	_onInteraction(interaction) {
@@ -255,11 +243,6 @@ class DiamondHandler extends EventEmitter {
 		if (interaction.isCommand()) return this.client.emit(Events.COMMAND, interaction);
 		if (interaction.isContextMenu()) return this.client.emit(Events.CONTEXT_MENU, interaction);
 		if (interaction.isSelectMenu()) return this.client.emit(Events.SELECT_MENU, interaction);
-	}
-	setDefaultLanguage(language) {
-		if (!this.messages.supportedLanguages.includes(language.toLowerCase()))
-			throw new Error('This language is not supported. Define it first in Messages file');
-		this.defaultLanguage = language.toLowerCase();
 	}
 	setColor(color) {
 		return (this.color = color);

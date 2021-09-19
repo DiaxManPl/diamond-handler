@@ -5,7 +5,7 @@ const {
 
 exports.Guild = function (instance) {
 	return {
-		getLanguage: () => instance.db[this.id]?.language || instance.defaultLanguage,
+		getLanguage: () => instance.db[this.id]?.language || instance.options.defaultLanguage,
 		getMessage: (path, placeholders) => {
 			path = `external.${this.getLanguage()}.${path}`;
 			let message = utils.objectPath(instance.messages, path);
@@ -60,6 +60,7 @@ exports.Interaction = function (instance) {
 				}
 			});
 		},
+		getMessage: (path, placeholders) => this.guild.getMessage(`commands.${this.commandName.toLowerCase()}.messages.${path}`, placeholders),
 		errorEmbed: (message, data) => {
 			return new utils.ErrorEmbed(this.guild, message, data);
 		},
