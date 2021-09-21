@@ -48,7 +48,8 @@
 			"errors": {
 				"noPermissions": "You don't have required permissions to perform this action. Required permissions: {permissions}",
 				"noBotPermissions": "Bot does not have required permissions to perform this action. Required permissions: {permissions}",
-				"commandDisabled": "Sorry. This command was disabled by developers"
+				"commandDisabled": "Sorry. This command was disabled by developers",
+				"paginatorNoPermissions": "You can't use the paginator if it isn't your"
 			},
 			"internalError": {
 				"title": "Bot error",

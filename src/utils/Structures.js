@@ -66,5 +66,8 @@ exports.Interaction = function (instance) {
 		},
 		embed: data => new utils.Embed(instance, data),
 		flagsToText: flags => utils.flagsToText(this.guild, flags),
+		createPages: async (pages, options = {}) => {
+			return await new utils.PageBuilder(this, pages, options).build();
+		},
 	};
 };
