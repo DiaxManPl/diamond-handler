@@ -18,7 +18,7 @@ class DiamondHandler extends EventEmitter {
 		if (!client || !client instanceof Client) throw new TypeError('Client is not instance od discord.js Client');
 		options = Object.assign(
 			{
-				filesEndings: {
+				fileEndings: {
 					commands: '.cmd.js',
 					features: '.feature.js',
 				},
@@ -73,7 +73,7 @@ class DiamondHandler extends EventEmitter {
 				const toReturn = Object.assign({ name: category }, require(path.join(this.options.commandsDir, category, '!category.json')), {
 					files: fs
 						.readdirSync(path.join(this.options.commandsDir, category))
-						.filter(file => file != '!category.json' && file.endsWith(this.options.filesEndings.commands))
+						.filter(file => file != '!category.json' && file.endsWith(this.options.fileEndings.commands))
 						.map(file => path.join(this.options.commandsDir, category, file)),
 				});
 				if (!toReturn.description || !toReturn.description.length)
@@ -97,7 +97,7 @@ class DiamondHandler extends EventEmitter {
 		this.client.on(Events.COMMAND, interaction => this._onCommand(interaction));
 	}
 	_buildFeatures() {
-		const files = fs.readdirSync(this.options.featuresDir).filter(file => file.endsWith(this.options.filesEndings.features));
+		const files = fs.readdirSync(this.options.featuresDir).filter(file => file.endsWith(this.options.fileEndings.features));
 		files.forEach(file => {
 			file = require(path.join(this.options.featuresDir, file));
 			if (!file || typeof file !== 'function') throw new Error('Feature must be a function');
@@ -247,14 +247,17 @@ class DiamondHandler extends EventEmitter {
 	setColor(color) {
 		return (this.color = color);
 	}
-	setGuildOptions(guildId, options = {}) {
+	setGuildLanguage(guildId, language) {
 		if (!this.db[guildId]) this.db[guildId] = {};
-		Object.assign(this.db[guildId], options);
+		this.db[guildId].language = language;
+	}
+	setGuildPermissions(guildId, permissions) {
+		if (!this.db[guildId]) this.db[guildId] = {};
+		this.db[guildId].permissions = permissions;
 	}
 	/**
 	 * A permission group
 	 * @typedef {Object} permissionGroup
-	 * @property {String} name The name of group
 	 * @property {Array} members List of members ids
 	 * @property {String[]} permissions List of permissions
 	 */

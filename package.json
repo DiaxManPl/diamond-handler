@@ -4,12 +4,16 @@
 	"description": "Discord.js handler",
 	"main": "src/index.js",
 	"scripts": {
-		"test": "nodemon test/index.test.js"
+		"test": "nodemon test/index.test.js",
+		"prepare": "husky install"
 	},
 	"author": "DiaxManPl <diaxman.gameplay@gmail.com>",
 	"license": "ISC",
 	"dependencies": {
 		"discord.js": "^13.1.0",
 		"fs-extra": "^10.0.0"
+	},
+	"devDependencies": {
+		"husky": "^7.0.0"
 	}
 }
