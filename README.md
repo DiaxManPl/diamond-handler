@@ -18,6 +18,8 @@ DiamondHandler is a [discord.js](https://discord.js.org) handler
     + [`name`](#name)
     + [`description`](#description)
     + [`disabled`](#disabled)
+    + [`permissions`](#permissions)
+    + [`botPermissions`](#botpermissions)
     + [`options`](#options)
       - [`name`](#name-1)
       - [`description`](#description-1)
@@ -43,17 +45,15 @@ DiamondHandler is a [discord.js](https://discord.js.org) handler
       - [`language`](#language)
     + [`setGuildPermissions(guildId, permissions)`](#setguildpermissionsguildid-permissions)
       - [`guildId`](#guildid-1)
-      - [`permissions`](#permissions)
+      - [`permissions`](#permissions-1)
     + [`setGlobalPermissions(permissions)`](#setglobalpermissionspermissions)
     + [`getMessage(path, placeholders)`](#getmessagepath-placeholders)
-        * [`path`](#path)
-        * [`placeholders`](#placeholders)
   * [Injected functions](#injected-functions)
     + [Guild](#guild)
       - [`getLanguage()`](#getlanguage)
       - [`getMessage(path, placeholders)`](#getmessagepath-placeholders-1)
-        * [`path`](#path-1)
-        * [`placeholders`](#placeholders-1)
+        * [`path`](#path)
+        * [`placeholders`](#placeholders)
     + [CommandInteraction](#commandinteraction)
       - [`hasPerms(nodes)`](#haspermsnodes)
         * [`nodes`](#nodes)
@@ -75,6 +75,11 @@ DiamondHandler is a [discord.js](https://discord.js.org) handler
       - [Wildcards](#wildcards)
       - [Negations](#negations)
     + [Members](#members)
+  * [Messages](#messages)
+    + [Internal](#internal)
+  * [External](#external)
+  * [Command messages](#command-messages)
+  * [Placeholders](#placeholders)
 
 <!-- tocstop -->
 
@@ -169,6 +174,18 @@ The description of the command
 Sould the command be disabled or not
 
 ---
+
+### `permissions`
+
+The permissions that the user must have to execute the command. If user doesn't have any of given permissions he will not be able to execute the command. If he has any of the given permissions he will be able to execute the command.
+
+Type: Array of [FLAGS](https://discord.js.org/#/docs/main/stable/class/Permissions?scrollTo=s-FLAGS) or our [permissions](#permissions-2)
+
+### `botPermissions`
+
+The permissions that the bot must have to execute the command.
+
+Type: Array of [FLAGS](https://discord.js.org/#/docs/main/stable/class/Permissions?scrollTo=s-FLAGS)
 
 ### `options`
 
@@ -329,40 +346,7 @@ Similar to `setGuildPermissions` but sets global permissions (permissions which 
 
 ### `getMessage(path, placeholders)`
 
-Returns the message from Messages.json
-
-##### `path`
-
-The path in messages object e.g. `test.testMessage`
-
-```json
-{{
-	"internal": {
-		"commandsLoaded": "Loaded {size} commands",
-		"featuresLoaded": "Loaded {size} features",
-		"test": {
-			"testMessage": "Hello {testPlaceholder}"
-		}
-	},
-	"external": {
-		"english": {}
-	}
-}}
-```
-
----
-
-##### `placeholders`
-
-Object with placeholders
-
-```
-{
-	testPlaceholder: 'Test'
-}
-```
-
-If message contains placeholder (in this example `{testPlaceholder}`) it will be replaced with the value of placeholder (in this example `Test`)
+See [message system](#messages)
 
 ---
 
@@ -426,7 +410,7 @@ Array of permissions (read more about our permission system [here](#permissions)
 
 #### `getMessage(path, placeholders)`
 
-Similar to the [`guild#getMessage`](#getmessagepath-placeholders-1) function but inserts command name to the path
+See [message system](#messages)
 
 ---
 
@@ -508,14 +492,144 @@ Example group:
 
 Basic usage is simple. For example permission `commands.utils.ban` gives group access to use function, where was provided permission `commands.utils.ban`
 
+---
+
 #### Wildcards
 
-What are they? Wildcard are char (in this handler `*`) that gives all permissions from parent node. For exapmle permission `commands.utils.*` gives permissions for all functions whoose parent node is `commands.utils`
+What are they? Wildcard is char (in this handler `*`)that gives all permissions from parent node. For example permission `commands.utils.*` gives permissions for all functions whose parent node is `commands.utils`
+
+---
 
 #### Negations
 
-Negations are char (in this handler `-`) that removes permission from group. For example group has permissions `commands.utils.*` and `-commands.utils.kick`. This group can run all functions whoose parent node is `commands.utils` but cannot run `command.utils.kick`
+Negation is a char (in this handler `-`)that removes permission from group. For example group has permissions `commands.utils.*` and `-commands.utils.kick`. This group can run all functions whose parent node is `commands.utils` but cannot run `command.utils.kick`
+
+---
 
 ### Members
 
 Group members are simply an array of Discord User IDs or Discord Role IDs
+
+---
+
+## Messages
+
+Our message system is based on the Messages file. Example file:
+
+```json
+{
+	"internal": {
+		"commandsLoaded": "Loaded {size} commands",
+		"featuresLoaded": "Loaded {size} features"
+	},
+	"external": {
+		"english": {
+			"slashCommandsLoadAddingError": "Cannot add slash commands to this server, bot must be added with the `application.commands` scope",
+			"errorEmbedTitle": "Error",
+			"permissions": {
+				"CREATE_INSTANT_INVITE": "CREATE INSTANT INVITE",
+				"KICK_MEMBERS": "KICK MEMBERS",
+				"BAN_MEMBERS": "BAN MEMBERS",
+				"ADMINISTRATOR": "ADMINISTRATOR",
+				"MANAGE_CHANNELS": "MANAGE CHANNELS",
+				"MANAGE_GUILDS": "MANAGE GUILDS",
+				"ADD_REACTIONS": "ADD REACTIONS",
+				"VIEW_AUDIT_LOGS": "VIEW AUDIT LOGS",
+				"PRIORITY_SPEAKER": "PRIORITY SPEAKER",
+				"STREAM": "STREAM",
+				"VIEW_CHANNEL": "VIEW CHANNEL",
+				"SEND_MESSAGES": "SEND MESSAGES",
+				"SEND_TTS_MESSAGES": "SEND TTS MESSAGES",
+				"MANAGE_MESSAGES": "MANAGE MESSAGES",
+				"EMBED_LINKS": "EMBED LINKS",
+				"ATTACH_FILES": "ATTACH FILES",
+				"READ_MESSAGE_HISTORY": "READ MESSAGE HISTORY",
+				"MENTION_EVERYONE": "MENTION EVERYONE",
+				"USE_EXTERNAL_EMOJIS": "USE EXTERNAL EMOJIS",
+				"VIEW_GUILD_INSHIGHTS": "VIEW GUILD INSHIGHTS",
+				"CONNECT": "CONNECT",
+				"SPEAK": "SPEAK",
+				"MUTE_MEMBERS": "MUTE MEMBERS",
+				"DEAFEN_MEMBERS": "DEAFEN MEMBERS",
+				"MOVE_MEMBERS": "MOVE MEMBERS",
+				"USE_VAD": "USE VAD",
+				"CHANGE_NICKNAMES": "CHANGE NICKNAMES",
+				"MANAGE_NICKNAMES": "MANAGE NICKNAMES",
+				"MANAGE_ROLES": "MANAGE ROLES",
+				"MANAGE_WEBHOOKS": "MANAGE WEBHOOKS",
+				"MANAGE_EMOJIS_AND_STICKERS": "MANAGE EMOJIS AND STICKERS",
+				"USE_APPLICATION_COMMANDS": "USE APPLICATION COMMANDS",
+				"REQUEST_TO_SPEAK": "REQUEST TO SPEAK",
+				"MMANAGE_THREADS": "MANAGE THREADS",
+				"USE_PUBLIC_THREADS": "USE PUBLIC THREADS",
+				"USE_EXTERNAL_STICKERS": "USE EXTERNAL STICKERS"
+			},
+			"errors": {
+				"noPermissions": "You don't have required permissions to perform this action. Required permissions: {permissions}",
+				"noBotPermissions": "Bot does not have required permissions to perform this action. Required permissions: {permissions}",
+				"commandDisabled": "Sorry. This command was disabled by developers",
+				"paginatorNoPermissions": "You can't use the paginator if it isn't your"
+			},
+			"internalError": {
+				"title": "Bot error",
+				"description": "An error occurred while executing this command"
+			},
+			"commands": {
+				"test": {
+					"description": "Test command",
+					"messages": {
+						"test": "ok"
+					}
+				}
+			}
+		}
+	}
+}
+```
+
+### Internal
+
+Internal messages are messages, that will be displayed in the console. You can get internal message by [`<instance>.getMessage`](#getmessagepath-placeholders)
+
+---
+
+## External
+
+External messages are messages, that will be displayed in the guild, so they are divided into different languages. You can get external message based on language by [`<guild>.getMessage`](#getmessagepath-placeholders-1)
+
+---
+
+## Command messages
+
+Command messages are a part of [external messages](#external). You can use it to specify command description and command options description. Example:
+
+```json
+"commands": {
+      "test": {
+        "description": "Test command",
+        "messages": {
+          "test": "ok"
+        }
+      }
+}
+```
+
+`Messages` in command object are simply messages, that can you get with [`<interaction>.getMessage`](#getmessagepath-placeholders-2)
+
+## Placeholders
+
+```json
+{
+	"internal": {
+		"test": "Hello {testPlaceholder}"
+	}
+}
+```
+
+```js
+<instance>.getMessage("test", {
+  testPlaceholder: "World!"
+})
+```
+
+If message contains placeholder (in this example `{testPlaceholder}`) it will be replaced with the value of placeholder (in this example `World!`)
