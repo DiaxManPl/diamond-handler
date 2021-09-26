@@ -120,11 +120,13 @@ const DiamondHandler = require('diamond-handler');
 const { Client } = require('discord.js');
 
 const client = new Client({
+	intents: [], //Your intents
+});
+const handler = new DiamondHandler(client, {
 	commandsDir: 'cmds', //Where command files are stored
 	featuresDir: 'features', //Where features files are stored
 	messagesPath: 'messages.json', //Where messages are stored
 });
-const handler = new DiamondHandler(client);
 
 client.login('superSecretToken');
 ```
