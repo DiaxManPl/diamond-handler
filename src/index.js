@@ -64,6 +64,7 @@ class DiamondHandler extends EventEmitter {
 		this._buildFeatures();
 		this.client.on(DCEvents.INTERACTION_CREATE, interaction => this._onInteraction(interaction));
 		this.client.on(DCEvents.CLIENT_READY, () => this._onReady());
+		this.client.on(DCEvents.GUILD_CREATE, guild => this._setupGuild(guild));
 	}
 	_buildCommands() {
 		this.categories = fs
@@ -196,7 +197,8 @@ class DiamondHandler extends EventEmitter {
 			console.log(error);
 		}
 	}
-	_onReady() {
+	_setupGuild(guild) {
+		Object.assign(guild, Guild.call(guild, this));
 		let commands = [...this.commands.values()];
 		const parseOptionType = options => {
 			return options.map(option => {
@@ -227,15 +229,21 @@ class DiamondHandler extends EventEmitter {
 					  }),
 			});
 		};
-		commands = commands.map(command => (command.options ? Object.assign({}, command, { options: parseOptionType(command.options) }) : command));
-		this.client.guilds.cache.forEach(async guild => {
-			Object.assign(guild, Guild.call(guild, this));
-			commands = commands.map(command => handleLanguage(command, guild));
-			guild.commands.set(commands).catch(err => {
-				guild.systemChannel.send(guild.getMessage('slashCommandsLoadAddingError'));
-				console.log(err);
-			});
+		commands = commands
+			.map(command => (command.options ? Object.assign({}, command, { options: parseOptionType(command.options) }) : command))
+			.map(command => handleLanguage(command, guild));
+		guild.commands.set(commands).catch(err => {
+			(guild.systemChannel ?? guild.channels.cache.first()).send(guild.getMessage('slashCommandsLoadAddingError'));
+			console.log(err);
 		});
+	}
+	_onReady() {
+		this.client.guilds.cache.forEach(async guild => {
+			this._setupGuild(guild);
+		});
+	}
+	_onGuildAdd(guild) {
+		this._setupGuild(guild);
 	}
 	_onInteraction(interaction) {
 		Object.assign(interaction, Interaction.call(interaction, this));
